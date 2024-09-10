@@ -1,12 +1,12 @@
-# 󰒋 Gen Mockserver
+# 💻 Gen Mockserver
 
-gen-mockserver is a simple tool for generating a mock server based on an [OpenAPI] Spec `v2` or `v3`.
+gen-mockserver is a simple tool for generating a mock server based on an [OpenAPI](https://www.openapis.org/) Spec `v2` or `v3`.
 
-##  Installation
+## 🛠️ Installation
 
 TODO
 
-##  Usage
+##  🎉 Usage
 
 TODO
 
