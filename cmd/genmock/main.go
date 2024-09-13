@@ -8,12 +8,12 @@ import (
 )
 
 var opts struct {
-	SpecFile string	`short:"s" long:"specfile" description:"path to your openapi specification file" required:"true"`
-	SpecMajorVersion int `short:"v" long:"specversion" choice:"2" choice:"3" description:"specify the major version of your spec" required:"true"`
-	Scheme string `short:"c" long:"scheme" default:"http" choice:"http" choice:"https" description:"specify the scheme that should be used by the mock server" required:"true"`
-	Port int `short:"p" long:"port" default:"5000" description:"specify the port that should be used by the mock server"`
-	DbFile string `short:"d" long:"dbfile" default:"db.json" description:"filename for the generated database (use the .json file extension)"`
-	ServerFile string `short:"f" long:"serverfile" default:"server.js" description:"filename for the generated server (use the .js file extension)"`
+	SpecFile string	`short:"s" long:"specfile" description:"[required] path to your openapi specification file" required:"true"`
+	SpecMajorVersion int `short:"v" long:"specversion" choice:"2" choice:"3" description:"[required] specify the major version of your spec" required:"true"`
+	Scheme string `short:"c" long:"scheme" default:"http" choice:"http" choice:"https" description:"[optional] specify the scheme that should be used by the mock server" required:"true"`
+	Port int `short:"p" long:"port" default:"5000" description:"[optional] specify the port that should be used by the mock server"`
+	DbFile string `short:"d" long:"dbfile" default:"db.json" description:"[optional] filename for the generated database (use the .json file extension)"`
+	ServerFile string `short:"f" long:"serverfile" default:"server.js" description:"[optional] filename for the generated server (use the .js file extension)"`
 	RecursionDepth int `short:"r" long:"recursiondepth" default:"0" description:"[optional] give the maximum recursion depth to generate the response json (default 0)"`
 	GenFakeExamples bool `short:"e" long:"exampledata" description:"[optional] generate fake example data in the responses"`
 }

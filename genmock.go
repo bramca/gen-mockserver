@@ -301,7 +301,10 @@ func schemaToPropertyMapV3(schema *base.SchemaProxy, definitions *orderedmapv2.O
 				if responseBodyPropertiesSchema.Maximum != nil {
 					maximum = int(*responseBodyPropertiesSchema.Maximum)
 				}
-				responseBody[responseBodyProperties.Key()] = gofakeit.IntRange(minimum, maximum)
+				responseBody[responseBodyProperties.Key()] = minimum
+				if genExamples {
+					responseBody[responseBodyProperties.Key()] = gofakeit.IntRange(minimum, maximum)
+				}
 			case "boolean":
 				responseBody[responseBodyProperties.Key()] = false
 			case "object":
