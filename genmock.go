@@ -168,38 +168,6 @@ services:
     ports:
       - "%d:%d"
 `
-
-	initMakefileTemplate = `
-MAKEFLAGS := --no-print-directory --silent
-
-i: install
-install: ## install application dependencies
-	@npm install
-
-r: run
-run: ## run application locally
-	@npm start
-
-b: docker.build
-docker.build: ## Build the docker container
-	@docker build . -t %s
-
-dr: docker.run
-docker.run: ## run docker containers
-	@docker-compose up -d
-
-ds: docker.stop
-docker.stop: ## stop docker containers
-	@docker-compose stop
-`
-
-	makefileTemplateHttps = `
-cr: create.certificate
-create.certificate: ## create self signed certificate
-	@openssl req -x509 -nodes -newkey rsa:2048 -keyout %s -out %s -sha256 -days 365 \
-    		-subj "/C=NL/ST=Amsterdam/L=Amsterdam/O=LocalHost/OU=IT Department/CN=localhost"
-	@chmod 644 %s
-`
 )
 
 type RequestStructure struct {
