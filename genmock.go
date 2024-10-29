@@ -197,7 +197,7 @@ docker.stop: ## stop docker containers
 cr: create.certificate
 create.certificate: ## create self signed certificate
 	@openssl req -x509 -nodes -newkey rsa:2048 -keyout %s -out %s -sha256 -days 365 \
-    		-subj "/C=NL/ST=Amsterdam/L=Amsterdam/O=ING/OU=IT Department/CN=localhost"
+    		-subj "/C=NL/ST=Amsterdam/L=Amsterdam/O=LocalHost/OU=IT Department/CN=localhost"
 	@chmod 644 %s
 `
 )
