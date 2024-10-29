@@ -309,7 +309,7 @@ func schemaToPropertyMapV3(schema *base.SchemaProxy, definitions *orderedmapv2.O
 				responseBody[responseBodyProperties.Key()] = false
 			case "object":
 				responseBody[responseBodyProperties.Key()] = map[string]any{}
-				responseBody[responseBodyProperties.Key()] = schemaToPropertyMapV3(responseBodyPropertiesSchema.ParentProxy, definitions, responseBody[responseBodyProperties.Key()].(map[string]any), maxRecursion, recursionDepth, genExamples)
+				responseBody[responseBodyProperties.Key()] = schemaToPropertyMapV3(responseBodyPropertiesSchema.ParentProxy, definitions, responseBody[responseBodyProperties.Key()].(map[string]any), maxRecursion, recursionDepth + 1, genExamples)
 			default:
 				responseBody[responseBodyProperties.Key()] = nil
 			}
