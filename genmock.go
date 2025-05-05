@@ -13,13 +13,13 @@ import (
 	"github.com/pb33f/libopenapi/datamodel/high/base"
 	"github.com/pb33f/libopenapi/orderedmap"
 	orderedmapv2 "github.com/wk8/go-ordered-map/v2"
-	"golang.org/x/exp/rand"
+	"math/rand/v2"
 )
 
 const (
 	letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-	keyFile = "key.pem"
-	certFile = "cert.pem"
+	keyFile     = "key.pem"
+	certFile    = "cert.pem"
 
 	initServerTemplateHttp = `
 const fs = require('fs');
@@ -64,7 +64,7 @@ server.use(jsonServer.rewriter({
 %s
 }));
 `
-	rewriterTemplate = `	"%s": "%s",`
+	rewriterTemplate   = `	"%s": "%s",`
 	serverCallTemplate = `
 server.%s('%s', (req, res) => {
 	console.log(%s);
@@ -171,26 +171,26 @@ services:
 )
 
 type RequestStructure struct {
-	Path string
-	Method string
-	Body string
-	DbEntry string
-	ResponseCode string
-	ResponseBody map[string]any
+	Path          string
+	Method        string
+	Body          string
+	DbEntry       string
+	ResponseCode  string
+	ResponseBody  any
 	RequestParams []string
-	RequestBody map[string]any
+	RequestBody   any
 }
 
 func RandStringBytesRmndr(n int) string {
-    b := make([]byte, n)
-    for i := range b {
-        b[i] = letterBytes[rand.Int63() % int64(len(letterBytes))]
-    }
-    return string(b)
+	b := make([]byte, n)
+	for i := range b {
+		b[i] = letterBytes[rand.Int64()%int64(len(letterBytes))]
+	}
+	return string(b)
 }
 
 func generateExampleData(responseBodyPropertiesSchema *base.Schema) string {
-	result := RandStringBytesRmndr(rand.Intn(15))
+	result := RandStringBytesRmndr(rand.IntN(15))
 	enumValues := []string{}
 	if responseBodyPropertiesSchema.Enum != nil {
 		for _, field := range responseBodyPropertiesSchema.Enum {
@@ -218,47 +218,65 @@ func generateExampleData(responseBodyPropertiesSchema *base.Schema) string {
 	return result
 }
 
-func schemaToPropertyMapV3(schema *base.SchemaProxy, definitions *orderedmapv2.OrderedMap[string, *base.SchemaProxy], responseBody map[string]any, maxRecursion int, recursionDepth int, genExamples bool) map[string]any{
+func schemaToPropertyMapV3(schema *base.SchemaProxy, definitions *orderedmapv2.OrderedMap[string, *base.SchemaProxy], responseBody any, maxRecursion int, recursionDepth int, genExamples bool) any {
 	if recursionDepth > maxRecursion {
 		return nil
 	}
 	responseBodySchema := schema.Schema()
 	if schema.IsReference() {
 		refSplit := strings.Split(schema.GetReference(), "/")
-		responseBodyRef := refSplit[len(refSplit) - 1]
+		responseBodyRef := refSplit[len(refSplit)-1]
 		responseBodyContent := definitions.GetPair(responseBodyRef)
 		if responseBodyContent.Value != nil {
 			responseBodySchema = responseBodyContent.Value.Schema()
 		}
 	}
-	if responseBodySchema.AllOf != nil {
+	if len(responseBodySchema.AllOf) > 0 {
 		for _, schemaField := range responseBodySchema.AllOf {
 			responseBody = schemaToPropertyMapV3(schemaField, definitions, responseBody, maxRecursion, recursionDepth, genExamples)
 		}
+	}
+	if responseBodySchema.Type != nil && responseBodySchema.Type[0] == "array" {
+		items := []map[string]any{}
+		if responseBodySchema.Items != nil && responseBodySchema.Items.IsA() {
+			arrayItemSchema := responseBodySchema.Items.A
+			arrayItem := map[string]any{}
+			arrayItem = schemaToPropertyMapV3(arrayItemSchema, definitions, arrayItem, maxRecursion, recursionDepth+1, genExamples).(map[string]any)
+			if arrayItem != nil {
+				items = []map[string]any{arrayItem}
+			}
+		}
+		if len(items) > 0 {
+			responseBody = items
+		} else {
+			responseBody = []any{}
+		}
+	} else {
+		responseBody = map[string]any{}
 	}
 	for responseBodyProperties := responseBodySchema.Properties.First(); responseBodyProperties != nil; responseBodyProperties = responseBodyProperties.Next() {
 		responseBodyPropertiesSchema := responseBodyProperties.Value().Schema()
 		if responseBodyPropertiesSchema.Type != nil {
 			switch responseBodyPropertiesSchema.Type[0] {
 			case "string":
-				responseBody[responseBodyProperties.Key()] = ""
+				responseBody.(map[string]any)[responseBodyProperties.Key()] = ""
 				if genExamples {
-					responseBody[responseBodyProperties.Key()] = generateExampleData(responseBodyPropertiesSchema)
+					responseBody.(map[string]any)[responseBodyProperties.Key()] = generateExampleData(responseBodyPropertiesSchema)
 				}
 			case "array":
 				items := []map[string]any{}
 				if responseBodyPropertiesSchema.Items != nil && responseBodyPropertiesSchema.Items.IsA() {
 					arrayItemSchema := responseBodyPropertiesSchema.Items.A
 					arrayItem := map[string]any{}
-					arrayItem = schemaToPropertyMapV3(arrayItemSchema, definitions, arrayItem, maxRecursion, recursionDepth + 1, genExamples)
+					arrayItem = schemaToPropertyMapV3(arrayItemSchema, definitions, arrayItem, maxRecursion, recursionDepth+1, genExamples).(map[string]any)
 					if arrayItem != nil {
 						items = []map[string]any{arrayItem}
 					}
 				}
 				if len(items) > 0 {
-					responseBody[responseBodyProperties.Key()] = items
+					responseBody.(map[string]any)[responseBodyProperties.Key()] = items
 				} else {
-					responseBody[responseBodyProperties.Key()] = []any{}
+					responseBody.(map[string]any)[responseBodyProperties.Key()] = []any{}
 				}
 			case "integer":
 				minimum := 0
@@ -269,17 +287,17 @@ func schemaToPropertyMapV3(schema *base.SchemaProxy, definitions *orderedmapv2.O
 				if responseBodyPropertiesSchema.Maximum != nil {
 					maximum = int(*responseBodyPropertiesSchema.Maximum)
 				}
-				responseBody[responseBodyProperties.Key()] = minimum
+				responseBody.(map[string]any)[responseBodyProperties.Key()] = minimum
 				if genExamples {
-					responseBody[responseBodyProperties.Key()] = gofakeit.IntRange(minimum, maximum)
+					responseBody.(map[string]any)[responseBodyProperties.Key()] = gofakeit.IntRange(minimum, maximum)
 				}
 			case "boolean":
-				responseBody[responseBodyProperties.Key()] = false
+				responseBody.(map[string]any)[responseBodyProperties.Key()] = false
 			case "object":
-				responseBody[responseBodyProperties.Key()] = map[string]any{}
-				responseBody[responseBodyProperties.Key()] = schemaToPropertyMapV3(responseBodyPropertiesSchema.ParentProxy, definitions, responseBody[responseBodyProperties.Key()].(map[string]any), maxRecursion, recursionDepth + 1, genExamples)
+				responseBody.(map[string]any)[responseBodyProperties.Key()] = map[string]any{}
+				responseBody.(map[string]any)[responseBodyProperties.Key()] = schemaToPropertyMapV3(responseBodyPropertiesSchema.ParentProxy, definitions, responseBody.(map[string]any)[responseBodyProperties.Key()].(map[string]any), maxRecursion, recursionDepth+1, genExamples)
 			default:
-				responseBody[responseBodyProperties.Key()] = nil
+				responseBody.(map[string]any)[responseBodyProperties.Key()] = nil
 			}
 		}
 	}
@@ -287,14 +305,14 @@ func schemaToPropertyMapV3(schema *base.SchemaProxy, definitions *orderedmapv2.O
 	return responseBody
 }
 
-func schemaToPropertyMapV2(schema *base.SchemaProxy, definitions *orderedmap.Map[string, *base.SchemaProxy], responseBody map[string]any, maxRecursion int, recursionDepth int, genExamples bool) map[string]any{
+func schemaToPropertyMapV2(schema *base.SchemaProxy, definitions *orderedmap.Map[string, *base.SchemaProxy], responseBody any, maxRecursion int, recursionDepth int, genExamples bool) any {
 	if recursionDepth > maxRecursion {
 		return nil
 	}
 	responseBodySchema := schema.Schema()
 	if schema.IsReference() {
 		refSplit := strings.Split(schema.GetReference(), "/")
-		responseBodyRef := refSplit[len(refSplit) - 1]
+		responseBodyRef := refSplit[len(refSplit)-1]
 		responseBodyContent := definitions.GetPair(responseBodyRef)
 		if responseBodyContent.Value != nil {
 			responseBodySchema = responseBodyContent.Value.Schema()
@@ -305,29 +323,47 @@ func schemaToPropertyMapV2(schema *base.SchemaProxy, definitions *orderedmap.Map
 			responseBody = schemaToPropertyMapV2(schemaField, definitions, responseBody, maxRecursion, recursionDepth, genExamples)
 		}
 	}
+	if responseBodySchema.Type != nil && responseBodySchema.Type[0] == "array" {
+		items := []map[string]any{}
+		if responseBodySchema.Items != nil && responseBodySchema.Items.IsA() {
+			arrayItemSchema := responseBodySchema.Items.A
+			arrayItem := map[string]any{}
+			arrayItem = schemaToPropertyMapV2(arrayItemSchema, definitions, arrayItem, maxRecursion, recursionDepth+1, genExamples).(map[string]any)
+			if arrayItem != nil {
+				items = []map[string]any{arrayItem}
+			}
+		}
+		if len(items) > 0 {
+			responseBody = items
+		} else {
+			responseBody = []any{}
+		}
+	} else {
+		responseBody = map[string]any{}
+	}
 	for responseBodyProperties := responseBodySchema.Properties.First(); responseBodyProperties != nil; responseBodyProperties = responseBodyProperties.Next() {
 		responseBodyPropertiesSchema := responseBodyProperties.Value().Schema()
 		if responseBodyPropertiesSchema.Type != nil {
 			switch responseBodyPropertiesSchema.Type[0] {
 			case "string":
-				responseBody[responseBodyProperties.Key()] = ""
+				responseBody.(map[string]any)[responseBodyProperties.Key()] = ""
 				if genExamples {
-					responseBody[responseBodyProperties.Key()] = generateExampleData(responseBodyPropertiesSchema)
+					responseBody.(map[string]any)[responseBodyProperties.Key()] = generateExampleData(responseBodyPropertiesSchema)
 				}
 			case "array":
 				items := []map[string]any{}
 				if responseBodyPropertiesSchema.Items != nil && responseBodyPropertiesSchema.Items.IsA() {
 					arrayItemSchema := responseBodyPropertiesSchema.Items.A
 					arrayItem := map[string]any{}
-					arrayItem = schemaToPropertyMapV2(arrayItemSchema, definitions, arrayItem, maxRecursion, recursionDepth + 1, genExamples)
+					arrayItem = schemaToPropertyMapV2(arrayItemSchema, definitions, arrayItem, maxRecursion, recursionDepth+1, genExamples).(map[string]any)
 					if arrayItem != nil {
 						items = []map[string]any{arrayItem}
 					}
 				}
 				if len(items) > 0 {
-					responseBody[responseBodyProperties.Key()] = items
+					responseBody.(map[string]any)[responseBodyProperties.Key()] = items
 				} else {
-					responseBody[responseBodyProperties.Key()] = []any{}
+					responseBody.(map[string]any)[responseBodyProperties.Key()] = []any{}
 				}
 			case "integer":
 				minimum := 0
@@ -338,11 +374,11 @@ func schemaToPropertyMapV2(schema *base.SchemaProxy, definitions *orderedmap.Map
 				if responseBodyPropertiesSchema.Maximum != nil {
 					maximum = int(*responseBodyPropertiesSchema.Maximum)
 				}
-				responseBody[responseBodyProperties.Key()] = gofakeit.IntRange(minimum, maximum)
+				responseBody.(map[string]any)[responseBodyProperties.Key()] = gofakeit.IntRange(minimum, maximum)
 			case "boolean":
-				responseBody[responseBodyProperties.Key()] = false
+				responseBody.(map[string]any)[responseBodyProperties.Key()] = false
 			default:
-				responseBody[responseBodyProperties.Key()] = nil
+				responseBody.(map[string]any)[responseBodyProperties.Key()] = nil
 			}
 		} else {
 			responseBody = schemaToPropertyMapV2(responseBodyPropertiesSchema.ParentProxy, definitions, responseBody, maxRecursion, recursionDepth, genExamples)
@@ -356,7 +392,6 @@ func SpecV2toRequestStructureMap(specFilename string, maxRecursionDepth int, gen
 	api, _ := os.ReadFile(specFilename)
 
 	document, err := libopenapi.NewDocument(api)
-
 	if err != nil {
 		panic(fmt.Sprintf("cannot create new document: %e", err))
 	}
@@ -376,12 +411,10 @@ func SpecV2toRequestStructureMap(specFilename string, maxRecursionDepth int, gen
 		re := regexp.MustCompile(`\{([^}]+)\}`)
 		searchParams := re.FindAllStringSubmatch(pathName, -1)
 		requestParams := []string{}
-		if searchParams != nil {
-			for _, param := range searchParams {
-				requestParam := strings.ReplaceAll(param[1], "-", "")
-				requestParams = append(requestParams, requestParam)
-				pathName = strings.ReplaceAll(pathName, param[1], requestParam)
-			}
+		for _, param := range searchParams {
+			requestParam := strings.ReplaceAll(param[1], "-", "")
+			requestParams = append(requestParams, requestParam)
+			pathName = strings.ReplaceAll(pathName, param[1], requestParam)
 		}
 		dbEntry := strings.ReplaceAll(re.ReplaceAllString(pathPairs.Key(), ""), "/", "-")
 		dbEntry = strings.ReplaceAll(dbEntry, "--", "-")
@@ -397,10 +430,10 @@ func SpecV2toRequestStructureMap(specFilename string, maxRecursionDepth int, gen
 		pathOperations := pathItem.GetOperations()
 		for pathOperationPairs := pathOperations.First(); pathOperationPairs != nil; pathOperationPairs = pathOperationPairs.Next() {
 			httpMethod := strings.ToLower(pathOperationPairs.Key())
-			responseBody := map[string]any{}
+			var responseBody any
 			var responseCode string
 			for responseCodes := pathOperationPairs.Value().Responses.Codes.First(); responseCodes != nil; responseCodes = responseCodes.Next() {
-				responseCodesInt , err := strconv.Atoi(responseCodes.Key())
+				responseCodesInt, err := strconv.Atoi(responseCodes.Key())
 				if err != nil {
 					continue
 				}
@@ -421,15 +454,15 @@ func SpecV2toRequestStructureMap(specFilename string, maxRecursionDepth int, gen
 			}
 
 			req := RequestStructure{
-				Path: pathName,
-				Method: httpMethod,
-				DbEntry: dbEntry,
-				ResponseCode: responseCode,
-				ResponseBody: responseBody,
+				Path:          pathName,
+				Method:        httpMethod,
+				DbEntry:       dbEntry,
+				ResponseCode:  responseCode,
+				ResponseBody:  responseBody,
 				RequestParams: requestParams,
 			}
 			if len(pathOperationPairs.Value().Parameters) > 0 {
-				requestBody := map[string]any{}
+				var requestBody any
 				for _, parameter := range pathOperationPairs.Value().Parameters {
 					if parameter.In == "body" {
 						requestBody = map[string]any{}
@@ -440,7 +473,7 @@ func SpecV2toRequestStructureMap(specFilename string, maxRecursionDepth int, gen
 			}
 			featureFileDataStructure[httpMethod][pathName] = append(featureFileDataStructure[httpMethod][pathName], req)
 			if len(pathOperationPairs.Value().Parameters) > 0 {
-				requestBody := map[string]any{}
+				var requestBody any
 				for _, parameter := range pathOperationPairs.Value().Parameters {
 					if parameter.In == "body" {
 						requestBody = map[string]any{}
@@ -451,13 +484,13 @@ func SpecV2toRequestStructureMap(specFilename string, maxRecursionDepth int, gen
 				for _, parameter := range pathOperationPairs.Value().Parameters {
 					if parameter.In == "query" {
 						req = RequestStructure{
-							Path: fmt.Sprintf("%s?%s=", pathName, parameter.Name),
-							Method: httpMethod,
-							DbEntry: dbEntry,
-							ResponseCode: responseCode,
-							ResponseBody: responseBody,
+							Path:          fmt.Sprintf("%s?%s=", pathName, parameter.Name),
+							Method:        httpMethod,
+							DbEntry:       dbEntry,
+							ResponseCode:  responseCode,
+							ResponseBody:  responseBody,
 							RequestParams: requestParams,
-							RequestBody: requestBody,
+							RequestBody:   requestBody,
 						}
 						featureFileDataStructure[httpMethod][pathName] = append(featureFileDataStructure[httpMethod][pathName], req)
 					}
@@ -473,7 +506,6 @@ func SpecV3toRequestStructureMap(specFilename string, maxRecursionDepth int, gen
 	api, _ := os.ReadFile(specFilename)
 
 	document, err := libopenapi.NewDocument(api)
-
 	if err != nil {
 		panic(fmt.Sprintf("cannot create new document: %e", err))
 	}
@@ -491,12 +523,10 @@ func SpecV3toRequestStructureMap(specFilename string, maxRecursionDepth int, gen
 		re := regexp.MustCompile(`\{([^}]+)\}`)
 		searchParams := re.FindAllStringSubmatch(pathName, -1)
 		requestParams := []string{}
-		if searchParams != nil {
-			for _, param := range searchParams {
-				requestParam := strings.ReplaceAll(param[1], "-", "")
-				requestParams = append(requestParams, requestParam)
-				pathName = strings.ReplaceAll(pathName, param[1], requestParam)
-			}
+		for _, param := range searchParams {
+			requestParam := strings.ReplaceAll(param[1], "-", "")
+			requestParams = append(requestParams, requestParam)
+			pathName = strings.ReplaceAll(pathName, param[1], requestParam)
 		}
 		dbEntry := strings.ReplaceAll(re.ReplaceAllString(pathPairs.Key(), ""), "/", "-")
 		dbEntry = strings.ReplaceAll(dbEntry, "--", "-")
@@ -512,15 +542,18 @@ func SpecV3toRequestStructureMap(specFilename string, maxRecursionDepth int, gen
 		pathOperations := pathItem.GetOperations()
 		for pathOperationPairs := pathOperations.First(); pathOperationPairs != nil; pathOperationPairs = pathOperationPairs.Next() {
 			httpMethod := strings.ToLower(pathOperationPairs.Key())
-			responseBody := map[string]any{}
+			var responseBody any
 			var responseCode string
 			for responseCodes := pathOperationPairs.Value().Responses.Codes.First(); responseCodes != nil; responseCodes = responseCodes.Next() {
-				responseCodesInt , err := strconv.Atoi(responseCodes.Key())
+				responseCodesInt, err := strconv.Atoi(responseCodes.Key())
 				if err != nil {
 					continue
 				}
 				if responseCodesInt < 300 {
 					responseCode = responseCodes.Key()
+					if responseCodes.Value().Content == nil {
+						continue
+					}
 					if responseCodes.Value().Content.Newest().Value.Schema != nil {
 						definitions := docModel.Model.Components.Schemas.OrderedMap
 						responseBody = schemaToPropertyMapV3(responseCodes.Value().Content.Newest().Value.Schema, definitions, responseBody, maxRecursionDepth, 0, genExamples)
@@ -536,16 +569,15 @@ func SpecV3toRequestStructureMap(specFilename string, maxRecursionDepth int, gen
 			}
 
 			req := RequestStructure{
-				Path: pathName,
-				Method: httpMethod,
-				DbEntry: dbEntry,
-				ResponseCode: responseCode,
-				ResponseBody: responseBody,
+				Path:          pathName,
+				Method:        httpMethod,
+				DbEntry:       dbEntry,
+				ResponseCode:  responseCode,
+				ResponseBody:  responseBody,
 				RequestParams: requestParams,
 			}
 
-
-			requestBody := map[string]any{}
+			var requestBody any
 			if pathOperationPairs.Value().RequestBody != nil {
 				requestBodyContent := pathOperationPairs.Value().RequestBody.Content
 				for requestBodyPairs := requestBodyContent.First(); requestBodyPairs != nil; requestBodyPairs = requestBodyPairs.Next() {
@@ -560,13 +592,13 @@ func SpecV3toRequestStructureMap(specFilename string, maxRecursionDepth int, gen
 				for _, parameter := range pathOperationPairs.Value().Parameters {
 					if parameter.In == "query" {
 						req = RequestStructure{
-							Path: fmt.Sprintf("%s?%s=", pathName, parameter.Name),
-							Method: httpMethod,
-							DbEntry: dbEntry,
-							ResponseCode: responseCode,
-							ResponseBody: responseBody,
+							Path:          fmt.Sprintf("%s?%s=", pathName, parameter.Name),
+							Method:        httpMethod,
+							DbEntry:       dbEntry,
+							ResponseCode:  responseCode,
+							ResponseBody:  responseBody,
 							RequestParams: requestParams,
-							RequestBody: requestBody,
+							RequestBody:   requestBody,
 						}
 						featureFileDataStructure[httpMethod][pathName] = append(featureFileDataStructure[httpMethod][pathName], req)
 					}
@@ -578,7 +610,7 @@ func SpecV3toRequestStructureMap(specFilename string, maxRecursionDepth int, gen
 	return featureFileDataStructure
 }
 
-func GenerateServerFile(scheme string, port int, dbFilename string, serverFilename string, featureFileDataStructure  map[string]map[string][]RequestStructure) {
+func GenerateServerFile(scheme string, port int, dbFilename string, serverFilename string, featureFileDataStructure map[string]map[string][]RequestStructure) {
 	featureFile, _ := os.Create(serverFilename)
 	defer featureFile.Close()
 
@@ -586,7 +618,6 @@ func GenerateServerFile(scheme string, port int, dbFilename string, serverFilena
 	if scheme == "https" {
 		featureFileContent = fmt.Sprintf(initServerTemplateHttps, dbFilename, dbFilename, port, keyFile, certFile)
 	}
-
 
 	var rewriterData []string
 	dbEntryMap := map[string][]any{}
@@ -617,7 +648,7 @@ func GenerateServerFile(scheme string, port int, dbFilename string, serverFilena
 					dbEntryCalls = append(dbEntryCalls, RequestStructure{
 						Path:          path,
 						Method:        filterPath.Method,
-						Body:	       filterPath.Body,
+						Body:          filterPath.Body,
 						DbEntry:       filterPath.DbEntry,
 						ResponseBody:  filterPath.ResponseBody,
 						ResponseCode:  filterPath.ResponseCode,
