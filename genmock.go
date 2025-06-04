@@ -3,6 +3,7 @@ package genmock
 import (
 	"encoding/json"
 	"fmt"
+	"math/rand/v2"
 	"os"
 	"regexp"
 	"strconv"
@@ -13,7 +14,6 @@ import (
 	"github.com/pb33f/libopenapi/datamodel/high/base"
 	"github.com/pb33f/libopenapi/orderedmap"
 	orderedmapv2 "github.com/wk8/go-ordered-map/v2"
-	"math/rand/v2"
 )
 
 const (
@@ -267,10 +267,10 @@ func schemaToPropertyMapV3(schema *base.SchemaProxy, definitions *orderedmapv2.O
 				items := []map[string]any{}
 				if responseBodyPropertiesSchema.Items != nil && responseBodyPropertiesSchema.Items.IsA() {
 					arrayItemSchema := responseBodyPropertiesSchema.Items.A
-					arrayItem := map[string]any{}
-					arrayItem = schemaToPropertyMapV3(arrayItemSchema, definitions, arrayItem, maxRecursion, recursionDepth+1, genExamples).(map[string]any)
+					var arrayItem any
+					arrayItem = schemaToPropertyMapV3(arrayItemSchema, definitions, arrayItem, maxRecursion, recursionDepth+1, genExamples)
 					if arrayItem != nil {
-						items = []map[string]any{arrayItem}
+						items = []map[string]any{arrayItem.(map[string]any)}
 					}
 				}
 				if len(items) > 0 {

@@ -9,7 +9,6 @@ require (
 	github.com/jessevdk/go-flags v1.6.1
 	github.com/pb33f/libopenapi v0.21.10
 	github.com/wk8/go-ordered-map/v2 v2.1.9-0.20240815153524-6ea36470d1bd
-	golang.org/x/exp v0.0.0-20250408133849-7e4ce0ab07d0
 )
 
 require (
