@@ -1,13 +1,11 @@
 module github.com/bramca/gen-mockserver
 
-go 1.23.0
-
-toolchain go1.23.1
+go 1.24.4
 
 require (
-	github.com/brianvoe/gofakeit/v7 v7.2.1
+	github.com/brianvoe/gofakeit/v7 v7.3.0
 	github.com/jessevdk/go-flags v1.6.1
-	github.com/pb33f/libopenapi v0.22.2
+	github.com/pb33f/libopenapi v0.23.0
 	github.com/wk8/go-ordered-map/v2 v2.1.9-0.20240815153524-6ea36470d1bd
 )
 

@@ -612,7 +612,12 @@ func SpecV3toRequestStructureMap(specFilename string, maxRecursionDepth int, gen
 
 func GenerateServerFile(scheme string, port int, dbFilename string, serverFilename string, featureFileDataStructure map[string]map[string][]RequestStructure) {
 	featureFile, _ := os.Create(serverFilename)
-	defer featureFile.Close()
+	defer func() {
+		err := featureFile.Close()
+		if err != nil {
+			panic(fmt.Sprintf("cannot not create featureFile '%s': %e", serverFilename, err))
+		}
+	}()
 
 	featureFileContent := fmt.Sprintf(initServerTemplateHttp, dbFilename, dbFilename, port)
 	if scheme == "https" {
@@ -694,7 +699,12 @@ func GenerateServerFile(scheme string, port int, dbFilename string, serverFilena
 	dbJson, _ := json.MarshalIndent(dbEntryMap, "", "  ")
 
 	dbFile, _ := os.Create(dbFilename)
-	defer dbFile.Close()
+	defer func() {
+		err := dbFile.Close()
+		if err != nil {
+			panic(fmt.Sprintf("cannot create dbFile '%s': %e", dbFilename, err))
+		}
+	}()
 
 	_, _ = dbFile.Write(dbJson)
 
