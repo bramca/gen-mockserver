@@ -13,7 +13,7 @@ import (
 	"github.com/pb33f/libopenapi"
 	"github.com/pb33f/libopenapi/datamodel/high/base"
 	"github.com/pb33f/libopenapi/orderedmap"
-	orderedmapv2 "github.com/wk8/go-ordered-map/v2"
+	orderedmapv2 "github.com/pb33f/ordered-map/v2"
 )
 
 const (
