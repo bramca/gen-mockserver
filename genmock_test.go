@@ -6,10 +6,11 @@ import (
 	"testing"
 	"time"
 
+	"go.yaml.in/yaml/v4"
+
 	"github.com/google/uuid"
 	"github.com/pb33f/libopenapi/datamodel/high/base"
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/yaml.v3"
 )
 
 func Test_RandStringBytesRmndr_ReturnsRandomString(t *testing.T) {
@@ -120,6 +121,372 @@ func Test_generateExampleData_ReturnsCorrectStringFormat(t *testing.T) {
 			// Assert
 			assert.NotEmpty(t, result)
 			assert.True(t, data.formatChecker(result))
+		})
+	}
+}
+
+func Test_SpecV3toRequestStructureMap_ReturnsResponseBody(t *testing.T) {
+	t.Parallel()
+
+	tests := map[string]struct {
+		maxRecursion int
+		expectedMap  map[string]map[string][]RequestStructure
+	}{
+		"0 recursion levels": {
+			maxRecursion: 0,
+			expectedMap: map[string]map[string][]RequestStructure{
+				"get": {
+					"/addresses": []RequestStructure{
+						{
+							Path:          "/addresses",
+							Method:        "get",
+							Body:          "",
+							DbEntry:       "addresses",
+							ResponseCode:  "200",
+							ResponseBody:  []any{},
+							RequestParams: []string{},
+							RequestBody:   nil,
+						},
+					},
+					"/cart": []RequestStructure{
+						{
+							Path:          "/cart",
+							Method:        "get",
+							Body:          "",
+							DbEntry:       "cart",
+							ResponseCode:  "200",
+							ResponseBody:  []any{},
+							RequestParams: []string{},
+							RequestBody:   nil,
+						},
+					},
+					"/orders": []RequestStructure{
+						{
+							Path:          "/orders",
+							Method:        "get",
+							Body:          "",
+							DbEntry:       "orders",
+							ResponseCode:  "200",
+							ResponseBody:  []any{},
+							RequestParams: []string{},
+							RequestBody:   nil,
+						},
+					},
+					"/orders/:orderId": []RequestStructure{
+						{
+							Path:         "/orders/:orderId",
+							Method:       "get",
+							Body:         "",
+							DbEntry:      "orders",
+							ResponseCode: "200",
+							ResponseBody: map[string]any{
+								"created_at":   "",
+								"id":           "",
+								"items":        []any{},
+								"status":       "",
+								"total_amount": nil,
+							},
+							RequestParams: []string{"orderId"},
+							RequestBody:   nil,
+						},
+					},
+					"/products": []RequestStructure{
+						{
+							Path:          "/products",
+							Method:        "get",
+							Body:          "",
+							DbEntry:       "products",
+							ResponseCode:  "200",
+							ResponseBody:  []any{},
+							RequestParams: []string{},
+							RequestBody:   nil,
+						},
+						{
+							Path:          "/products?category=",
+							Method:        "get",
+							Body:          "",
+							DbEntry:       "products",
+							ResponseCode:  "200",
+							ResponseBody:  []any{},
+							RequestParams: []string{},
+							RequestBody:   nil,
+						},
+						{
+							Path:          "/products?search=",
+							Method:        "get",
+							Body:          "",
+							DbEntry:       "products",
+							ResponseCode:  "200",
+							ResponseBody:  []any{},
+							RequestParams: []string{},
+							RequestBody:   nil,
+						},
+						{
+							Path:          "/products?min_price=",
+							Method:        "get",
+							Body:          "",
+							DbEntry:       "products",
+							ResponseCode:  "200",
+							ResponseBody:  []any{},
+							RequestParams: []string{},
+							RequestBody:   nil,
+						},
+						{
+							Path:          "/products?max_price=",
+							Method:        "get",
+							Body:          "",
+							DbEntry:       "products",
+							ResponseCode:  "200",
+							ResponseBody:  []any{},
+							RequestParams: []string{},
+							RequestBody:   nil,
+						},
+					},
+					"/products/:id": []RequestStructure{
+						{
+							Path:         "/products/:id",
+							Method:       "get",
+							Body:         "",
+							DbEntry:      "products",
+							ResponseCode: "200",
+							ResponseBody: map[string]any{
+								"category":    "",
+								"created_at":  "",
+								"description": "",
+								"id":          "",
+								"image_url":   "",
+								"name":        "",
+								"price":       nil,
+								"stock":       0,
+								"updated_at":  "",
+							},
+							RequestParams: []string{"id"},
+							RequestBody:   nil,
+						},
+					},
+				},
+				"post": {
+					"/addresses": []RequestStructure{
+						{
+							Path:          "/addresses",
+							Method:        "post",
+							Body:          "",
+							DbEntry:       "addresses",
+							ResponseCode:  "201",
+							ResponseBody:  nil,
+							RequestParams: []string{},
+							RequestBody: map[string]any{
+								"city":        "",
+								"country":     "",
+								"line1":       "",
+								"line2":       "",
+								"postal_code": "",
+								"state":       "",
+							},
+						},
+					},
+					"/auth/login": []RequestStructure{
+						{
+							Path:          "/auth/login",
+							Method:        "post",
+							Body:          "",
+							DbEntry:       "auth-login",
+							ResponseCode:  "200",
+							ResponseBody:  nil,
+							RequestParams: []string{},
+							RequestBody: map[string]any{
+								"email":    "",
+								"password": "",
+							},
+						},
+					},
+					"/auth/register": []RequestStructure{
+						{
+							Path:          "/auth/register",
+							Method:        "post",
+							Body:          "",
+							DbEntry:       "auth-register",
+							ResponseCode:  "201",
+							ResponseBody:  nil,
+							RequestParams: []string{},
+							RequestBody: map[string]any{
+								"email":    "",
+								"name":     "",
+								"password": "",
+							},
+						},
+					},
+					"/cart/items": []RequestStructure{
+						{
+							Path:          "/cart/items",
+							Method:        "post",
+							Body:          "",
+							DbEntry:       "cart-items",
+							ResponseCode:  "200",
+							ResponseBody:  nil,
+							RequestParams: []string{},
+							RequestBody: map[string]any{
+								"product_id": "", "quantity": 1,
+							},
+						},
+					},
+					"/checkout": []RequestStructure{
+						{
+							Path:         "/checkout",
+							Method:       "post",
+							Body:         "",
+							DbEntry:      "checkout",
+							ResponseCode: "201",
+							ResponseBody: map[string]any{
+								"created_at":   "",
+								"id":           "",
+								"items":        []any{},
+								"status":       "",
+								"total_amount": nil,
+							},
+							RequestParams: []string{},
+							RequestBody: map[string]any{
+								"address_id":        "",
+								"payment_method_id": "",
+							},
+						},
+					},
+				},
+			},
+		},
+		"1 recursion level": {
+			maxRecursion: 1,
+
+			expectedMap: map[string]map[string][]RequestStructure{
+				"get": {
+					"/addresses": {
+						{
+							Path: "/addresses", Method: "get", Body: "", DbEntry: "addresses", ResponseCode: "200", ResponseBody: []map[string]any{
+								{
+									"city": "", "country": "", "line1": "", "line2": "", "postal_code": "", "state": "",
+								},
+							}, RequestParams: []string{}, RequestBody: nil,
+						},
+					}, "/cart": {
+						{
+							Path: "/cart", Method: "get", Body: "", DbEntry: "cart", ResponseCode: "200", ResponseBody: []map[string]any{
+								{
+									"product_id": "", "quantity": 1,
+								},
+							}, RequestParams: []string{}, RequestBody: nil,
+						},
+					}, "/orders": {
+						{
+							Path: "/orders", Method: "get", Body: "", DbEntry: "orders", ResponseCode: "200", ResponseBody: []map[string]any{
+								{
+									"created_at": "", "id": "", "items": []any{}, "status": "", "total_amount": nil,
+								},
+							}, RequestParams: []string{}, RequestBody: nil,
+						},
+					}, "/orders/:orderId": {
+						{
+							Path: "/orders/:orderId", Method: "get", Body: "", DbEntry: "orders", ResponseCode: "200", ResponseBody: map[string]any{
+								"created_at": "", "id": "", "items": []map[string]any{
+									{
+										"product_id": "", "quantity": 1,
+									},
+								}, "status": "", "total_amount": nil,
+							}, RequestParams: []string{
+								"orderId",
+							}, RequestBody: nil,
+						},
+					}, "/products": {
+						{
+							Path: "/products", Method: "get", Body: "", DbEntry: "products", ResponseCode: "200", ResponseBody: []map[string]any{
+								{
+									"category": "", "created_at": "", "description": "", "id": "", "image_url": "", "name": "", "price": nil, "stock": 0, "updated_at": "",
+								},
+							}, RequestParams: []string{}, RequestBody: nil,
+						}, {
+							Path: "/products?category=", Method: "get", Body: "", DbEntry: "products", ResponseCode: "200", ResponseBody: []map[string]any{
+								{
+									"category": "", "created_at": "", "description": "", "id": "", "image_url": "", "name": "", "price": nil, "stock": 0, "updated_at": "",
+								},
+							}, RequestParams: []string{}, RequestBody: nil,
+						}, {
+							Path: "/products?search=", Method: "get", Body: "", DbEntry: "products", ResponseCode: "200", ResponseBody: []map[string]any{
+								{
+									"category": "", "created_at": "", "description": "", "id": "", "image_url": "", "name": "", "price": nil, "stock": 0, "updated_at": "",
+								},
+							}, RequestParams: []string{}, RequestBody: nil,
+						}, {
+							Path: "/products?min_price=", Method: "get", Body: "", DbEntry: "products", ResponseCode: "200", ResponseBody: []map[string]any{
+								{
+									"category": "", "created_at": "", "description": "", "id": "", "image_url": "", "name": "", "price": nil, "stock": 0, "updated_at": "",
+								},
+							}, RequestParams: []string{}, RequestBody: nil,
+						}, {
+							Path: "/products?max_price=", Method: "get", Body: "", DbEntry: "products", ResponseCode: "200", ResponseBody: []map[string]any{
+								{
+									"category": "", "created_at": "", "description": "", "id": "", "image_url": "", "name": "", "price": nil, "stock": 0, "updated_at": "",
+								},
+							}, RequestParams: []string{}, RequestBody: nil,
+						},
+					}, "/products/:id": {
+						{
+							Path: "/products/:id", Method: "get", Body: "", DbEntry: "products", ResponseCode: "200", ResponseBody: map[string]any{
+								"category": "", "created_at": "", "description": "", "id": "", "image_url": "", "name": "", "price": nil, "stock": 0, "updated_at": "",
+							}, RequestParams: []string{
+								"id",
+							}, RequestBody: nil,
+						},
+					},
+				}, "post": {
+					"/addresses": {
+						{
+							Path: "/addresses", Method: "post", Body: "", DbEntry: "addresses", ResponseCode: "201", ResponseBody: nil, RequestParams: []string{}, RequestBody: map[string]any{
+								"city": "", "country": "", "line1": "", "line2": "", "postal_code": "", "state": "",
+							},
+						},
+					}, "/auth/login": {
+						{
+							Path: "/auth/login", Method: "post", Body: "", DbEntry: "auth-login", ResponseCode: "200", ResponseBody: nil, RequestParams: []string{}, RequestBody: map[string]any{
+								"email": "", "password": "",
+							},
+						},
+					}, "/auth/register": {
+						{
+							Path: "/auth/register", Method: "post", Body: "", DbEntry: "auth-register", ResponseCode: "201", ResponseBody: nil, RequestParams: []string{}, RequestBody: map[string]any{
+								"email": "", "name": "", "password": "",
+							},
+						},
+					}, "/cart/items": {
+						{
+							Path: "/cart/items", Method: "post", Body: "", DbEntry: "cart-items", ResponseCode: "200", ResponseBody: nil, RequestParams: []string{}, RequestBody: map[string]any{
+								"product_id": "", "quantity": 1,
+							},
+						},
+					}, "/checkout": {
+						{
+							Path: "/checkout", Method: "post", Body: "", DbEntry: "checkout", ResponseCode: "201", ResponseBody: map[string]any{
+								"created_at": "", "id": "", "items": []map[string]any{
+									{
+										"product_id": "", "quantity": 1,
+									},
+								}, "status": "", "total_amount": nil,
+							}, RequestParams: []string{}, RequestBody: map[string]any{
+								"address_id": "", "payment_method_id": "",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+	for name, data := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			// Act
+			resultMap := SpecV3toRequestStructureMap("./testdata/examplev3.yaml", data.maxRecursion, false)
+
+			// Assert
+			assert.Equal(t, data.expectedMap, resultMap)
 		})
 	}
 }

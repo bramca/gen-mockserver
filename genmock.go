@@ -240,10 +240,10 @@ func schemaToPropertyMapV3(schema *base.SchemaProxy, definitions *orderedmapv2.O
 		items := []map[string]any{}
 		if responseBodySchema.Items != nil && responseBodySchema.Items.IsA() {
 			arrayItemSchema := responseBodySchema.Items.A
-			arrayItem := map[string]any{}
-			arrayItem = schemaToPropertyMapV3(arrayItemSchema, definitions, arrayItem, maxRecursion, recursionDepth+1, genExamples).(map[string]any)
+			var arrayItem any
+			arrayItem = schemaToPropertyMapV3(arrayItemSchema, definitions, arrayItem, maxRecursion, recursionDepth+1, genExamples)
 			if arrayItem != nil {
-				items = []map[string]any{arrayItem}
+				items = []map[string]any{arrayItem.(map[string]any)}
 			}
 		}
 		if len(items) > 0 {

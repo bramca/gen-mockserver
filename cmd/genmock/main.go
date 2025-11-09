@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/bramca/gen-mockserver"
+	genmock "github.com/bramca/gen-mockserver"
 	"github.com/jessevdk/go-flags"
 )
 

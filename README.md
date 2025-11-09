@@ -57,6 +57,7 @@ This will generate the following files:
 ├── package.json
 └── server.js
 ```
+ref [example folder](./example/)
 
 #### Files
 - *Dockerfile*
