@@ -1,6 +1,7 @@
 package genmock
 
 import (
+	"fmt"
 	"net"
 	"slices"
 	"testing"
@@ -489,4 +490,192 @@ func Test_SpecV3toRequestStructureMap_ReturnsResponseBody(t *testing.T) {
 			assert.Equal(t, data.expectedMap, resultMap)
 		})
 	}
+}
+
+func Test_SpecV2toRequestStructureMap_ReturnsResponseBody(t *testing.T) {
+
+	t.Parallel()
+	// Assert
+	expectedMap := map[string]map[string][]RequestStructure{
+		"delete": {
+			"/v1/products/:productId": {
+				{
+					Path:          "/v1/products/:productId",
+					Method:        "delete",
+					Body:          "",
+					DbEntry:       "products",
+					ResponseCode:  "204",
+					ResponseBody:  nil,
+					RequestParams: []string{"productId"},
+					RequestBody:   nil,
+				},
+			},
+		},
+
+		"get": {
+			"/v1/products": {
+				{
+					Path:         "/v1/products",
+					Method:       "get",
+					Body:         "",
+					DbEntry:      "products",
+					ResponseCode: "200",
+					ResponseBody: map[string]any{
+						"items": []map[string]any{
+							{
+								"description": "",
+								"id":          "",
+								"metadata":    nil,
+								"name":        "",
+								"price":       nil,
+								"tags":        []any{},
+							},
+						},
+						"page":       0,
+						"pageSize":   0,
+						"totalItems": 0,
+					},
+					RequestParams: []string{},
+					RequestBody:   nil,
+				},
+				{
+					Path:         "/v1/products?page=",
+					Method:       "get",
+					Body:         "",
+					DbEntry:      "products",
+					ResponseCode: "200",
+					ResponseBody: map[string]any{
+						"items": []map[string]any{
+							{
+								"description": "",
+								"id":          "",
+								"metadata":    nil,
+								"name":        "",
+								"price":       nil,
+								"tags":        []any{},
+							},
+						},
+						"page":       0,
+						"pageSize":   0,
+						"totalItems": 0,
+					},
+					RequestParams: []string{},
+					RequestBody:   nil,
+				},
+				{
+					Path:         "/v1/products?pageSize=",
+					Method:       "get",
+					Body:         "",
+					DbEntry:      "products",
+					ResponseCode: "200",
+					ResponseBody: map[string]any{
+						"items": []map[string]any{
+							{
+								"description": "",
+								"id":          "",
+								"metadata":    nil,
+								"name":        "",
+								"price":       nil,
+								"tags":        []any{},
+							},
+						},
+						"page":       0,
+						"pageSize":   0,
+						"totalItems": 0,
+					},
+					RequestParams: []string{},
+					RequestBody:   nil,
+				},
+			},
+
+			"/v1/products/:productId": {
+				{
+					Path:         "/v1/products/:productId",
+					Method:       "get",
+					Body:         "",
+					DbEntry:      "products",
+					ResponseCode: "200",
+					ResponseBody: map[string]any{
+						"description": "",
+						"id":          "",
+						"metadata":    nil,
+						"name":        "",
+						"price":       nil,
+						"tags":        []any{},
+					},
+					RequestParams: []string{"productId"},
+					RequestBody:   nil,
+				},
+			},
+
+			"/v1/users/:userId/orders": {
+				{
+					Path:         "/v1/users/:userId/orders",
+					Method:       "get",
+					Body:         "",
+					DbEntry:      "users-orders",
+					ResponseCode: "200",
+					ResponseBody: []map[string]any{
+						{
+							"id":         "",
+							"items":      []map[string]any{},
+							"status":     "",
+							"totalPrice": nil,
+							"userId":     "",
+						},
+					},
+					RequestParams: []string{"userId"},
+					RequestBody:   nil,
+				},
+				{
+					Path:         "/v1/users/:userId/orders?status=",
+					Method:       "get",
+					Body:         "",
+					DbEntry:      "users-orders",
+					ResponseCode: "200",
+					ResponseBody: []map[string]any{
+						{
+							"id":         "",
+							"items":      []map[string]any{},
+							"status":     "",
+							"totalPrice": nil,
+							"userId":     "",
+						},
+					},
+					RequestParams: []string{"userId"},
+					RequestBody:   nil,
+				},
+			},
+		},
+
+		"post": {
+			"/v1/products": {
+				{
+					Path:         "/v1/products",
+					Method:       "post",
+					Body:         "",
+					DbEntry:      "products",
+					ResponseCode: "201",
+					ResponseBody: map[string]any{
+						"description": "",
+						"id":          "",
+						"metadata":    nil,
+						"name":        "",
+						"price":       nil,
+						"tags":        []any{},
+					},
+					RequestParams: []string{},
+					RequestBody:   map[string]any{},
+				},
+			},
+		},
+	}
+
+	// Act
+	resultMap := SpecV2toRequestStructureMap("./testdata/examplev2v2.yaml", 1, false)
+
+	fmt.Printf("resultMap: %+v\n", resultMap)
+
+	// Assert
+	assert.Equal(t, expectedMap, resultMap)
 }

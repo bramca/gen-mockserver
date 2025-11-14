@@ -287,7 +287,11 @@ func schemaToPropertyMapV3(schema *base.SchemaProxy, definitions *orderedmapv2.O
 				if responseBodyPropertiesSchema.Maximum != nil {
 					maximum = int(*responseBodyPropertiesSchema.Maximum)
 				}
-				responseBody.(map[string]any)[responseBodyProperties.Key()] = minimum
+				if responseBodyPropertiesSchema.Default != nil {
+					responseBody.(map[string]any)[responseBodyProperties.Key()] = responseBodyPropertiesSchema.Default.Value
+				} else {
+					responseBody.(map[string]any)[responseBodyProperties.Key()] = minimum
+				}
 				if genExamples {
 					responseBody.(map[string]any)[responseBodyProperties.Key()] = gofakeit.IntRange(minimum, maximum)
 				}
@@ -327,10 +331,10 @@ func schemaToPropertyMapV2(schema *base.SchemaProxy, definitions *orderedmap.Map
 		items := []map[string]any{}
 		if responseBodySchema.Items != nil && responseBodySchema.Items.IsA() {
 			arrayItemSchema := responseBodySchema.Items.A
-			arrayItem := map[string]any{}
-			arrayItem = schemaToPropertyMapV2(arrayItemSchema, definitions, arrayItem, maxRecursion, recursionDepth+1, genExamples).(map[string]any)
+			var arrayItem any
+			arrayItem = schemaToPropertyMapV2(arrayItemSchema, definitions, arrayItem, maxRecursion, recursionDepth+1, genExamples)
 			if arrayItem != nil {
-				items = []map[string]any{arrayItem}
+				items = []map[string]any{arrayItem.(map[string]any)}
 			}
 		}
 		if len(items) > 0 {
@@ -354,10 +358,10 @@ func schemaToPropertyMapV2(schema *base.SchemaProxy, definitions *orderedmap.Map
 				items := []map[string]any{}
 				if responseBodyPropertiesSchema.Items != nil && responseBodyPropertiesSchema.Items.IsA() {
 					arrayItemSchema := responseBodyPropertiesSchema.Items.A
-					arrayItem := map[string]any{}
-					arrayItem = schemaToPropertyMapV2(arrayItemSchema, definitions, arrayItem, maxRecursion, recursionDepth+1, genExamples).(map[string]any)
+					var arrayItem any
+					arrayItem = schemaToPropertyMapV2(arrayItemSchema, definitions, arrayItem, maxRecursion, recursionDepth+1, genExamples)
 					if arrayItem != nil {
-						items = []map[string]any{arrayItem}
+						items = []map[string]any{arrayItem.(map[string]any)}
 					}
 				}
 				if len(items) > 0 {
@@ -374,7 +378,14 @@ func schemaToPropertyMapV2(schema *base.SchemaProxy, definitions *orderedmap.Map
 				if responseBodyPropertiesSchema.Maximum != nil {
 					maximum = int(*responseBodyPropertiesSchema.Maximum)
 				}
-				responseBody.(map[string]any)[responseBodyProperties.Key()] = gofakeit.IntRange(minimum, maximum)
+				if responseBodyPropertiesSchema.Default != nil {
+					responseBody.(map[string]any)[responseBodyProperties.Key()] = responseBodyPropertiesSchema.Default.Value
+				} else {
+					responseBody.(map[string]any)[responseBodyProperties.Key()] = minimum
+				}
+				if genExamples {
+					responseBody.(map[string]any)[responseBodyProperties.Key()] = gofakeit.IntRange(minimum, maximum)
+				}
 			case "boolean":
 				responseBody.(map[string]any)[responseBodyProperties.Key()] = false
 			default:
