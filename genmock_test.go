@@ -1,7 +1,6 @@
 package genmock
 
 import (
-	"fmt"
 	"net"
 	"slices"
 	"testing"
@@ -601,7 +600,9 @@ func Test_SpecV2toRequestStructureMap_ReturnsResponseBody(t *testing.T) {
 						"metadata":    nil,
 						"name":        "",
 						"price":       nil,
-						"tags":        []any{},
+						"tags": []map[string]any{
+							{},
+						},
 					},
 					RequestParams: []string{"productId"},
 					RequestBody:   nil,
@@ -618,7 +619,7 @@ func Test_SpecV2toRequestStructureMap_ReturnsResponseBody(t *testing.T) {
 					ResponseBody: []map[string]any{
 						{
 							"id":         "",
-							"items":      []map[string]any{},
+							"items":      []any{},
 							"status":     "",
 							"totalPrice": nil,
 							"userId":     "",
@@ -636,7 +637,7 @@ func Test_SpecV2toRequestStructureMap_ReturnsResponseBody(t *testing.T) {
 					ResponseBody: []map[string]any{
 						{
 							"id":         "",
-							"items":      []map[string]any{},
+							"items":      []any{},
 							"status":     "",
 							"totalPrice": nil,
 							"userId":     "",
@@ -662,7 +663,9 @@ func Test_SpecV2toRequestStructureMap_ReturnsResponseBody(t *testing.T) {
 						"metadata":    nil,
 						"name":        "",
 						"price":       nil,
-						"tags":        []any{},
+						"tags": []map[string]any{
+							{},
+						},
 					},
 					RequestParams: []string{},
 					RequestBody:   map[string]any{},
@@ -672,9 +675,7 @@ func Test_SpecV2toRequestStructureMap_ReturnsResponseBody(t *testing.T) {
 	}
 
 	// Act
-	resultMap := SpecV2toRequestStructureMap("./testdata/examplev2v2.yaml", 1, false)
-
-	fmt.Printf("resultMap: %+v\n", resultMap)
+	resultMap := SpecV2toRequestStructureMap("./testdata/examplev2.yaml", 1, false)
 
 	// Assert
 	assert.Equal(t, expectedMap, resultMap)
