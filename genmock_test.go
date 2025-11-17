@@ -1,7 +1,9 @@
 package genmock
 
 import (
+	"fmt"
 	"net"
+	"os"
 	"slices"
 	"testing"
 	"time"
@@ -679,4 +681,41 @@ func Test_SpecV2toRequestStructureMap_ReturnsResponseBody(t *testing.T) {
 
 	// Assert
 	assert.Equal(t, expectedMap, resultMap)
+}
+
+func Test_GenerateDbFile_ReturnsContent(t *testing.T) {
+	t.Parallel()
+
+	// Arrange
+	featureFileDataStructure := SpecV3toRequestStructureMap("./testdata/examplev3.yaml", 1, false)
+	expectedResult, err := os.ReadFile("./testdata/examplev3-result/db.json")
+
+	// Act
+	result := GenerateDbFile(featureFileDataStructure)
+
+	// Assert
+	assert.NoError(t, err)
+	assert.Equal(t, string(expectedResult), result)
+}
+
+func Test_GenerateServerFile_ReturnsContent(t *testing.T) {
+	t.Parallel()
+
+	// Arrange
+	featureFileDataStructure := SpecV3toRequestStructureMap("./testdata/examplev3.yaml", 1, false)
+	scheme := "http"
+	port := 5000
+	dbFile := "db.json"
+	expectedResult, err := os.ReadFile("./testdata/examplev3-result/server.js")
+
+	// Act
+	result := GenerateServerFile(scheme, port, dbFile, featureFileDataStructure)
+
+	fmt.Printf("result:\n%s", result)
+
+	fmt.Printf("expectedResult:\n%s", expectedResult)
+
+	// Assert
+	assert.NoError(t, err)
+	// assert.Equal(t, string(expectedResult), result)
 }
