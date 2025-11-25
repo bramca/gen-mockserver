@@ -1,5 +1,9 @@
 # 💻 Gen Mockserver
 
+[![Go package](https://github.com/bramca/gen-mockserver/actions/workflows/test.yaml/badge.svg)](https://github.com/bramca/gen-mockserver/actions/workflows/test.yaml)
+![GitHub](https://img.shields.io/github/license/bramca/gen-mockserver)
+![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/bramca/gen-mockserver)
+
 gen-mockserver is a simple tool for generating a mock server based on an [OpenAPI](https://www.openapis.org/) Spec `v2` or `v3`.
 
 ## 🛠️ Installation
