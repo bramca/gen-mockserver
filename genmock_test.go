@@ -703,19 +703,73 @@ func Test_GenerateServerFile_ReturnsContent(t *testing.T) {
 
 	// Arrange
 	featureFileDataStructure := SpecV3toRequestStructureMap("./testdata/examplev3.yaml", 1, false)
-	scheme := "http"
+	scheme := "https"
 	port := 5000
 	dbFile := "db.json"
 	expectedResult, err := os.ReadFile("./testdata/examplev3-result/server.js")
+	expectedResultSorted := make([]byte, len(expectedResult))
+	copy(expectedResultSorted, expectedResult)
+	slices.Sort(expectedResultSorted)
 
 	// Act
 	result := GenerateServerFile(scheme, port, dbFile, featureFileDataStructure)
 
-	fmt.Printf("result:\n%s", result)
-
-	fmt.Printf("expectedResult:\n%s", expectedResult)
+	resultSorted := []byte(result)
+	slices.Sort(resultSorted)
 
 	// Assert
 	assert.NoError(t, err)
-	// assert.Equal(t, string(expectedResult), result)
+	if !assert.Equal(t, expectedResultSorted, resultSorted) {
+		fmt.Printf("File contents are not equal.\nexpected content:\n%s\n----------\nactual content:\n%s", expectedResult, result)
+		t.Fail()
+	}
+}
+
+func Test_GenerateDockerfile_ReturnsContent(t *testing.T) {
+	t.Parallel()
+
+	// Arrange
+	scheme := "https"
+	port := 5000
+	dbFile := "db.json"
+	serverFile := "server.js"
+	expectedResult, err := os.ReadFile("./testdata/examplev3-result/Dockerfile")
+
+	// Act
+	result := GenerateDockerfile(dbFile, serverFile, port, scheme)
+
+	// Assert
+	assert.NoError(t, err)
+	assert.Equal(t, string(expectedResult), result)
+}
+
+func Test_GenerateDockerCompose_ReturnsContent(t *testing.T) {
+	t.Parallel()
+
+	// Arrange
+	port := 5000
+	serverFile := "server.js"
+	expectedResult, err := os.ReadFile("./testdata/examplev3-result/compose.yaml")
+
+	// Act
+	result := GenerateDockerCompose(serverFile, port)
+
+	// Assert
+	assert.NoError(t, err)
+	assert.Equal(t, string(expectedResult), result)
+}
+
+func Test_GeneratePackageJson_ReturnsContent(t *testing.T) {
+	t.Parallel()
+
+	// Arrange
+	serverFile := "server.js"
+	expectedResult, err := os.ReadFile("./testdata/examplev3-result/package.json")
+
+	// Act
+	result := GeneratePackageJson(serverFile)
+
+	// Assert
+	assert.NoError(t, err)
+	assert.Equal(t, string(expectedResult), result)
 }
