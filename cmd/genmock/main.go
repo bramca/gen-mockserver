@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/bramca/gen-mockserver"
+	genmock "github.com/bramca/gen-mockserver"
 	"github.com/jessevdk/go-flags"
 )
 
@@ -39,7 +39,19 @@ func main() {
 	if specMajorVersion == 3 {
 		featureFileDataStructure = genmock.SpecV3toRequestStructureMap(specFile, maxRecursionDepth, opts.GenFakeExamples)
 	}
-	genmock.GenerateServerFile(scheme, port, dbFile, serverFile, featureFileDataStructure)
-	genmock.GenerateDocker(dbFile, serverFile, port, scheme)
-	genmock.GeneratePackageJson(serverFile)
+
+	featureFileContent := genmock.GenerateServerFile(scheme, port, dbFile, featureFileDataStructure)
+	genmock.WriteFile(serverFile, []byte(featureFileContent))
+
+	dbFileContent := genmock.GenerateDbFile(featureFileDataStructure)
+	genmock.WriteFile(dbFile, []byte(dbFileContent))
+
+	dockerfileContent := genmock.GenerateDockerfile(dbFile, serverFile, port, scheme)
+	genmock.WriteFile("Dockerfile", []byte(dockerfileContent))
+
+	dockerComposeContent := genmock.GenerateDockerCompose(serverFile, port)
+	genmock.WriteFile("compose.yaml", []byte(dockerComposeContent))
+
+	packageJsonContent := genmock.GeneratePackageJson(serverFile)
+	genmock.WriteFile("package.json", []byte(packageJsonContent))
 }

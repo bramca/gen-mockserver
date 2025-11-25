@@ -240,10 +240,10 @@ func schemaToPropertyMapV3(schema *base.SchemaProxy, definitions *orderedmapv2.O
 		items := []map[string]any{}
 		if responseBodySchema.Items != nil && responseBodySchema.Items.IsA() {
 			arrayItemSchema := responseBodySchema.Items.A
-			arrayItem := map[string]any{}
-			arrayItem = schemaToPropertyMapV3(arrayItemSchema, definitions, arrayItem, maxRecursion, recursionDepth+1, genExamples).(map[string]any)
+			var arrayItem any
+			arrayItem = schemaToPropertyMapV3(arrayItemSchema, definitions, arrayItem, maxRecursion, recursionDepth+1, genExamples)
 			if arrayItem != nil {
-				items = []map[string]any{arrayItem}
+				items = []map[string]any{arrayItem.(map[string]any)}
 			}
 		}
 		if len(items) > 0 {
@@ -287,7 +287,11 @@ func schemaToPropertyMapV3(schema *base.SchemaProxy, definitions *orderedmapv2.O
 				if responseBodyPropertiesSchema.Maximum != nil {
 					maximum = int(*responseBodyPropertiesSchema.Maximum)
 				}
-				responseBody.(map[string]any)[responseBodyProperties.Key()] = minimum
+				if responseBodyPropertiesSchema.Default != nil {
+					responseBody.(map[string]any)[responseBodyProperties.Key()] = responseBodyPropertiesSchema.Default.Value
+				} else {
+					responseBody.(map[string]any)[responseBodyProperties.Key()] = minimum
+				}
 				if genExamples {
 					responseBody.(map[string]any)[responseBodyProperties.Key()] = gofakeit.IntRange(minimum, maximum)
 				}
@@ -327,10 +331,10 @@ func schemaToPropertyMapV2(schema *base.SchemaProxy, definitions *orderedmap.Map
 		items := []map[string]any{}
 		if responseBodySchema.Items != nil && responseBodySchema.Items.IsA() {
 			arrayItemSchema := responseBodySchema.Items.A
-			arrayItem := map[string]any{}
-			arrayItem = schemaToPropertyMapV2(arrayItemSchema, definitions, arrayItem, maxRecursion, recursionDepth+1, genExamples).(map[string]any)
+			var arrayItem any
+			arrayItem = schemaToPropertyMapV2(arrayItemSchema, definitions, arrayItem, maxRecursion, recursionDepth+1, genExamples)
 			if arrayItem != nil {
-				items = []map[string]any{arrayItem}
+				items = []map[string]any{arrayItem.(map[string]any)}
 			}
 		}
 		if len(items) > 0 {
@@ -354,10 +358,10 @@ func schemaToPropertyMapV2(schema *base.SchemaProxy, definitions *orderedmap.Map
 				items := []map[string]any{}
 				if responseBodyPropertiesSchema.Items != nil && responseBodyPropertiesSchema.Items.IsA() {
 					arrayItemSchema := responseBodyPropertiesSchema.Items.A
-					arrayItem := map[string]any{}
-					arrayItem = schemaToPropertyMapV2(arrayItemSchema, definitions, arrayItem, maxRecursion, recursionDepth+1, genExamples).(map[string]any)
+					var arrayItem any
+					arrayItem = schemaToPropertyMapV2(arrayItemSchema, definitions, arrayItem, maxRecursion, recursionDepth+1, genExamples)
 					if arrayItem != nil {
-						items = []map[string]any{arrayItem}
+						items = []map[string]any{arrayItem.(map[string]any)}
 					}
 				}
 				if len(items) > 0 {
@@ -374,7 +378,14 @@ func schemaToPropertyMapV2(schema *base.SchemaProxy, definitions *orderedmap.Map
 				if responseBodyPropertiesSchema.Maximum != nil {
 					maximum = int(*responseBodyPropertiesSchema.Maximum)
 				}
-				responseBody.(map[string]any)[responseBodyProperties.Key()] = gofakeit.IntRange(minimum, maximum)
+				if responseBodyPropertiesSchema.Default != nil {
+					responseBody.(map[string]any)[responseBodyProperties.Key()] = responseBodyPropertiesSchema.Default.Value
+				} else {
+					responseBody.(map[string]any)[responseBodyProperties.Key()] = minimum
+				}
+				if genExamples {
+					responseBody.(map[string]any)[responseBodyProperties.Key()] = gofakeit.IntRange(minimum, maximum)
+				}
 			case "boolean":
 				responseBody.(map[string]any)[responseBodyProperties.Key()] = false
 			default:
@@ -610,23 +621,8 @@ func SpecV3toRequestStructureMap(specFilename string, maxRecursionDepth int, gen
 	return featureFileDataStructure
 }
 
-func GenerateServerFile(scheme string, port int, dbFilename string, serverFilename string, featureFileDataStructure map[string]map[string][]RequestStructure) {
-	featureFile, _ := os.Create(serverFilename)
-	defer func() {
-		err := featureFile.Close()
-		if err != nil {
-			panic(fmt.Sprintf("cannot not create featureFile '%s': %e", serverFilename, err))
-		}
-	}()
-
-	featureFileContent := fmt.Sprintf(initServerTemplateHttp, dbFilename, dbFilename, port)
-	if scheme == "https" {
-		featureFileContent = fmt.Sprintf(initServerTemplateHttps, dbFilename, dbFilename, port, keyFile, certFile)
-	}
-
-	var rewriterData []string
+func GenerateDbFile(featureFileDataStructure map[string]map[string][]RequestStructure) string {
 	dbEntryMap := map[string][]any{}
-	dbEntryCalls := []RequestStructure{}
 	dbCallMap := map[string]map[string]bool{}
 	for _, calls := range featureFileDataStructure {
 		for _, filterPaths := range calls {
@@ -634,6 +630,38 @@ func GenerateServerFile(scheme string, port int, dbFilename string, serverFilena
 				if _, ok := dbEntryMap[filterPath.DbEntry]; !ok {
 					dbEntryMap[filterPath.DbEntry] = []any{}
 				}
+				path := fmt.Sprintf("/%s", filterPath.DbEntry)
+				if len(filterPath.RequestParams) > 0 {
+					path = fmt.Sprintf("%s/:%s", path, strings.Join(filterPath.RequestParams, "/:"))
+				}
+				if _, ok := dbCallMap[path]; !ok {
+					dbCallMap[path] = map[string]bool{
+						filterPath.Method: true,
+					}
+				} else if !dbCallMap[path][filterPath.Method] {
+					dbCallMap[path][filterPath.Method] = true
+				}
+			}
+		}
+	}
+
+	dbJson, _ := json.MarshalIndent(dbEntryMap, "", "  ")
+
+	return string(dbJson)
+}
+
+func GenerateServerFile(scheme string, port int, dbFilename string, featureFileDataStructure map[string]map[string][]RequestStructure) string {
+	featureFileContent := fmt.Sprintf(initServerTemplateHttp, dbFilename, dbFilename, port)
+	if scheme == "https" {
+		featureFileContent = fmt.Sprintf(initServerTemplateHttps, dbFilename, dbFilename, port, keyFile, certFile)
+	}
+
+	var rewriterData []string
+	dbEntryCalls := []RequestStructure{}
+	dbCallMap := map[string]map[string]bool{}
+	for _, calls := range featureFileDataStructure {
+		for _, filterPaths := range calls {
+			for _, filterPath := range filterPaths {
 				path := fmt.Sprintf("/%s", filterPath.DbEntry)
 				if len(filterPath.RequestParams) > 0 {
 					path = fmt.Sprintf("%s/:%s", path, strings.Join(filterPath.RequestParams, "/:"))
@@ -696,36 +724,41 @@ func GenerateServerFile(scheme string, port int, dbFilename string, serverFilena
 
 	featureFileContent = fmt.Sprintf("%s%s", featureFileContent, endServerFile)
 
-	dbJson, _ := json.MarshalIndent(dbEntryMap, "", "  ")
-
-	dbFile, _ := os.Create(dbFilename)
-	defer func() {
-		err := dbFile.Close()
-		if err != nil {
-			panic(fmt.Sprintf("cannot create dbFile '%s': %e", dbFilename, err))
-		}
-	}()
-
-	_, _ = dbFile.Write(dbJson)
-
-	_, _ = featureFile.Write([]byte(featureFileContent))
+	return featureFileContent
 }
 
-func GenerateDocker(dbFileName string, serverFile string, port int, scheme string) {
+func GenerateDockerfile(dbFileName string, serverFile string, port int, scheme string) string {
 	result := fmt.Sprintf(initDockerFileTemplate, dbFileName, port)
 	serverName := strings.Replace(serverFile, ".js", "", 1)
+
 	if scheme == "https" {
 		result = fmt.Sprintf(initDockerFileTemplateHttps, dbFileName, keyFile, certFile, serverName, serverName, keyFile, port)
 	}
-	dockerFile, _ := os.Create("Dockerfile")
-	_, _ = dockerFile.Write([]byte(result))
-	resultCmp := fmt.Sprintf(initDockerComposeTemplate, serverName, port, port, port)
-	dockerCompose, _ := os.Create("compose.yaml")
-	_, _ = dockerCompose.Write([]byte(resultCmp))
+
+	return result
 }
 
-func GeneratePackageJson(serverFile string) {
-	result := fmt.Sprintf(initPackageJson, strings.Replace(serverFile, ".js", "", 1), serverFile, serverFile)
-	packageJsonFile, _ := os.Create("package.json")
-	_, _ = packageJsonFile.Write([]byte(result))
+func GenerateDockerCompose(serverFile string, port int) string {
+	serverName := strings.Replace(serverFile, ".js", "", 1)
+
+	return fmt.Sprintf(initDockerComposeTemplate, serverName, port, port, port)
+}
+
+func GeneratePackageJson(serverFile string) string {
+	return fmt.Sprintf(initPackageJson, strings.Replace(serverFile, ".js", "", 1), serverFile, serverFile)
+}
+
+func WriteFile(filename string, content []byte) {
+	file, _ := os.Create(filename)
+	defer func() {
+		err := file.Close()
+		if err != nil {
+			panic(fmt.Sprintf("cannot create dbFile '%s': %e", filename, err))
+		}
+	}()
+
+	_, err := file.Write(content)
+	if err != nil {
+		panic(fmt.Sprintf("error writing file '%s': %e", filename, err))
+	}
 }
