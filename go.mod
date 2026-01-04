@@ -9,7 +9,7 @@ require (
 	github.com/pb33f/libopenapi v0.28.2
 	github.com/pb33f/ordered-map/v2 v2.3.0
 	github.com/stretchr/testify v1.11.1
-	go.yaml.in/yaml/v4 v4.0.0-rc.2
+	go.yaml.in/yaml/v4 v4.0.0-rc.3
 )
 
 require (
