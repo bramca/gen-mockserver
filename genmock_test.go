@@ -494,7 +494,6 @@ func Test_SpecV3toRequestStructureMap_ReturnsResponseBody(t *testing.T) {
 }
 
 func Test_SpecV2toRequestStructureMap_ReturnsResponseBody(t *testing.T) {
-
 	t.Parallel()
 	// Assert
 	expectedMap := map[string]map[string][]RequestStructure{
