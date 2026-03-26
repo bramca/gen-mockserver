@@ -566,7 +566,10 @@ func SpecV3toRequestStructureMap(specFilename string, maxRecursionDepth int, gen
 						continue
 					}
 					if responseCodes.Value().Content.Newest().Value.Schema != nil {
-						definitions := docModel.Model.Components.Schemas.OrderedMap
+						definitions := &orderedmapv2.OrderedMap[string, *base.SchemaProxy]{}
+						if docModel.Model.Components != nil {
+							definitions = docModel.Model.Components.Schemas.OrderedMap
+						}
 						responseBody = schemaToPropertyMapV3(responseCodes.Value().Content.Newest().Value.Schema, definitions, responseBody, maxRecursionDepth, 0, genExamples)
 					}
 
@@ -593,7 +596,10 @@ func SpecV3toRequestStructureMap(specFilename string, maxRecursionDepth int, gen
 				requestBodyContent := pathOperationPairs.Value().RequestBody.Content
 				for requestBodyPairs := requestBodyContent.First(); requestBodyPairs != nil; requestBodyPairs = requestBodyPairs.Next() {
 					requestBodySchema := requestBodyPairs.Value().Schema
-					definitions := docModel.Model.Components.Schemas.OrderedMap
+					definitions := &orderedmapv2.OrderedMap[string, *base.SchemaProxy]{}
+					if docModel.Model.Components != nil {
+						definitions = docModel.Model.Components.Schemas.OrderedMap
+					}
 					requestBody = schemaToPropertyMapV3(requestBodySchema, definitions, requestBody, maxRecursionDepth, 0, genExamples)
 					req.RequestBody = requestBody
 				}

@@ -20,3 +20,6 @@ lint: ## Lint the code locally
 
 test:
 	go test ./... -coverprofile=coverage.out
+
+build:
+	go build -o ./bin/genmock ./cmd/genmock/main.go
