@@ -6,7 +6,7 @@ require (
 	github.com/brianvoe/gofakeit/v7 v7.14.1
 	github.com/google/uuid v1.6.0
 	github.com/jessevdk/go-flags v1.6.1
-	github.com/pb33f/libopenapi v0.34.3
+	github.com/pb33f/libopenapi v0.34.4
 	github.com/pb33f/ordered-map/v2 v2.3.1
 	github.com/stretchr/testify v1.11.1
 	go.yaml.in/yaml/v4 v4.0.0-rc.4
