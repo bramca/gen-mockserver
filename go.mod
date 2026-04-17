@@ -6,9 +6,10 @@ require (
 	github.com/brianvoe/gofakeit/v7 v7.14.1
 	github.com/google/uuid v1.6.0
 	github.com/jessevdk/go-flags v1.6.1
-	github.com/pb33f/libopenapi v0.35.0
+	github.com/pb33f/libopenapi v0.36.1
 	github.com/pb33f/ordered-map/v2 v2.3.1
 	github.com/stretchr/testify v1.11.1
+	github.com/test-go/testify v1.1.4
 	go.yaml.in/yaml/v4 v4.0.0-rc.4
 )
 
@@ -19,6 +20,6 @@ require (
 	github.com/pb33f/jsonpath v0.8.2 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	golang.org/x/sync v0.20.0 // indirect
-	golang.org/x/sys v0.42.0 // indirect
+	golang.org/x/sys v0.43.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

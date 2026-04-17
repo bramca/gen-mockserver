@@ -23,7 +23,7 @@ func main() {
 	_, err := flags.Parse(&opts)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Something went wrong with the argument parsing: %v", err)
-		os.Exit(2)
+		os.Exit(1)
 	}
 	specFile := opts.SpecFile
 	specMajorVersion := opts.SpecMajorVersion
@@ -34,24 +34,62 @@ func main() {
 	maxRecursionDepth := opts.RecursionDepth
 	var featureFileDataStructure map[string]map[string][]genmock.RequestStructure
 	if specMajorVersion == 2 {
-		featureFileDataStructure = genmock.SpecV2toRequestStructureMap(specFile, maxRecursionDepth, opts.GenFakeExamples)
+		featureFileDataStructure, err = genmock.SpecV2toRequestStructureMap(specFile, maxRecursionDepth, opts.GenFakeExamples)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Something went wrong with parsing the spec file: %v", err)
+			os.Exit(1)
+		}
 	}
 	if specMajorVersion == 3 {
-		featureFileDataStructure = genmock.SpecV3toRequestStructureMap(specFile, maxRecursionDepth, opts.GenFakeExamples)
+		featureFileDataStructure, err = genmock.SpecV3toRequestStructureMap(specFile, maxRecursionDepth, opts.GenFakeExamples)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Something went wrong with parsing the spec file: %v", err)
+			os.Exit(1)
+		}
 	}
 
-	featureFileContent := genmock.GenerateServerFile(scheme, port, dbFile, featureFileDataStructure)
-	genmock.WriteFile(serverFile, []byte(featureFileContent))
+	featureFileContent, err := genmock.GenerateServerFile(scheme, port, dbFile, featureFileDataStructure)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Something went wrong with generating the server file: %e", err)
+		os.Exit(1)
+	}
 
-	dbFileContent := genmock.GenerateDbFile(featureFileDataStructure)
-	genmock.WriteFile(dbFile, []byte(dbFileContent))
+	err = genmock.WriteFile(serverFile, []byte(featureFileContent))
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Something went wrong with writing the server file: %e", err)
+		os.Exit(1)
+	}
+
+	dbFileContent, err := genmock.GenerateDbFile(featureFileDataStructure)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Something went wrong with generating the database file: %e", err)
+		os.Exit(1)
+	}
+
+	err = genmock.WriteFile(dbFile, []byte(dbFileContent))
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Something went wrong with writing the database file: %e", err)
+		os.Exit(1)
+	}
 
 	dockerfileContent := genmock.GenerateDockerfile(dbFile, serverFile, port, scheme)
-	genmock.WriteFile("Dockerfile", []byte(dockerfileContent))
+	err = genmock.WriteFile("Dockerfile", []byte(dockerfileContent))
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Something went wrong with writing the docker file: %e", err)
+		os.Exit(1)
+	}
 
 	dockerComposeContent := genmock.GenerateDockerCompose(serverFile, port)
-	genmock.WriteFile("compose.yaml", []byte(dockerComposeContent))
+	err = genmock.WriteFile("compose.yaml", []byte(dockerComposeContent))
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Something went wrong with writing the docker compose file: %e", err)
+		os.Exit(1)
+	}
 
 	packageJsonContent := genmock.GeneratePackageJson(serverFile)
-	genmock.WriteFile("package.json", []byte(packageJsonContent))
+	err = genmock.WriteFile("package.json", []byte(packageJsonContent))
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Something went wrong with writing the package file: %e", err)
+		os.Exit(1)
+	}
 }
