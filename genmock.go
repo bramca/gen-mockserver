@@ -184,12 +184,14 @@ type RequestStructure struct {
 func RandStringBytesRmndr(n int) string {
 	b := make([]byte, n)
 	for i := range b {
+		// #nosec G404 // Not really a security risk as it is just to provide example data
 		b[i] = letterBytes[rand.Int64()%int64(len(letterBytes))]
 	}
 	return string(b)
 }
 
 func generateExampleData(responseBodyPropertiesSchema *base.Schema) string {
+	// #nosec G404 // Not really a security risk as it is just to provide example data
 	result := RandStringBytesRmndr(rand.IntN(15))
 	enumValues := []string{}
 	if responseBodyPropertiesSchema.Enum != nil {
@@ -399,18 +401,26 @@ func schemaToPropertyMapV2(schema *base.SchemaProxy, definitions *orderedmap.Map
 	return responseBody
 }
 
-func SpecV2toRequestStructureMap(specFilename string, maxRecursionDepth int, genExamples bool) map[string]map[string][]RequestStructure {
-	api, _ := os.ReadFile(specFilename)
+func SpecV2toRequestStructureMap(specFilename string, maxRecursionDepth int, genExamples bool) (map[string]map[string][]RequestStructure, error) {
+	apiDir, err := os.OpenRoot(".")
+	if err != nil {
+		return map[string]map[string][]RequestStructure{}, err
+	}
+
+	api, err := apiDir.ReadFile(specFilename)
+	if err != nil {
+		return map[string]map[string][]RequestStructure{}, err
+	}
 
 	document, err := libopenapi.NewDocument(api)
 	if err != nil {
-		panic(fmt.Sprintf("cannot create new document: %e", err))
+		return map[string]map[string][]RequestStructure{}, err
 	}
 
 	docModel, errors := document.BuildV2Model()
 
 	if errors != nil {
-		panic(fmt.Sprintf("cannot build doc model: %e", errors))
+		return map[string]map[string][]RequestStructure{}, err
 	}
 
 	featureFileDataStructure := map[string]map[string][]RequestStructure{}
@@ -510,21 +520,29 @@ func SpecV2toRequestStructureMap(specFilename string, maxRecursionDepth int, gen
 		}
 	}
 
-	return featureFileDataStructure
+	return featureFileDataStructure, nil
 }
 
-func SpecV3toRequestStructureMap(specFilename string, maxRecursionDepth int, genExamples bool) map[string]map[string][]RequestStructure {
-	api, _ := os.ReadFile(specFilename)
+func SpecV3toRequestStructureMap(specFilename string, maxRecursionDepth int, genExamples bool) (map[string]map[string][]RequestStructure, error) {
+	apiDir, err := os.OpenRoot(".")
+	if err != nil {
+		return map[string]map[string][]RequestStructure{}, err
+	}
+
+	api, err := apiDir.ReadFile(specFilename)
+	if err != nil {
+		return map[string]map[string][]RequestStructure{}, err
+	}
 
 	document, err := libopenapi.NewDocument(api)
 	if err != nil {
-		panic(fmt.Sprintf("cannot create new document: %e", err))
+		return map[string]map[string][]RequestStructure{}, err
 	}
 
 	docModel, errors := document.BuildV3Model()
 
 	if errors != nil {
-		panic(fmt.Sprintf("cannot build doc model: %e", errors))
+		return map[string]map[string][]RequestStructure{}, err
 	}
 
 	featureFileDataStructure := map[string]map[string][]RequestStructure{}
@@ -624,10 +642,10 @@ func SpecV3toRequestStructureMap(specFilename string, maxRecursionDepth int, gen
 		}
 	}
 
-	return featureFileDataStructure
+	return featureFileDataStructure, nil
 }
 
-func GenerateDbFile(featureFileDataStructure map[string]map[string][]RequestStructure) string {
+func GenerateDbFile(featureFileDataStructure map[string]map[string][]RequestStructure) (string, error) {
 	dbEntryMap := map[string][]any{}
 	dbCallMap := map[string]map[string]bool{}
 	for _, calls := range featureFileDataStructure {
@@ -651,12 +669,15 @@ func GenerateDbFile(featureFileDataStructure map[string]map[string][]RequestStru
 		}
 	}
 
-	dbJson, _ := json.MarshalIndent(dbEntryMap, "", "  ")
+	dbJson, err := json.MarshalIndent(dbEntryMap, "", "  ")
+	if err != nil {
+		return "", err
+	}
 
-	return string(dbJson)
+	return string(dbJson), nil
 }
 
-func GenerateServerFile(scheme string, port int, dbFilename string, featureFileDataStructure map[string]map[string][]RequestStructure) string {
+func GenerateServerFile(scheme string, port int, dbFilename string, featureFileDataStructure map[string]map[string][]RequestStructure) (string, error) {
 	featureFileContent := fmt.Sprintf(initServerTemplateHttp, dbFilename, dbFilename, port)
 	if scheme == "https" {
 		featureFileContent = fmt.Sprintf(initServerTemplateHttps, dbFilename, dbFilename, port, keyFile, certFile)
@@ -713,7 +734,10 @@ func GenerateServerFile(scheme string, port int, dbFilename string, featureFileD
 		}
 		response := "undefined"
 		if call.ResponseBody != nil {
-			responseJson, _ := json.MarshalIndent(call.ResponseBody, "", "\t\t")
+			responseJson, err := json.MarshalIndent(call.ResponseBody, "", "\t\t")
+			if err != nil {
+				return "", err
+			}
 			response = strings.Replace(string(responseJson), "}", "\t}", 1)
 		}
 		addWriteToDbFunc := ""
@@ -730,7 +754,7 @@ func GenerateServerFile(scheme string, port int, dbFilename string, featureFileD
 
 	featureFileContent = fmt.Sprintf("%s%s", featureFileContent, endServerFile)
 
-	return featureFileContent
+	return featureFileContent, nil
 }
 
 func GenerateDockerfile(dbFileName string, serverFile string, port int, scheme string) string {
@@ -754,17 +778,26 @@ func GeneratePackageJson(serverFile string) string {
 	return fmt.Sprintf(initPackageJson, strings.Replace(serverFile, ".js", "", 1), serverFile, serverFile)
 }
 
-func WriteFile(filename string, content []byte) {
-	file, _ := os.Create(filename)
+func WriteFile(filename string, content []byte) error {
+	fileDir, err := os.OpenRoot(".")
+	if err != nil {
+		return err
+	}
+	file, err := fileDir.Create(filename)
+	if err != nil {
+		return err
+	}
 	defer func() {
 		err := file.Close()
 		if err != nil {
-			panic(fmt.Sprintf("cannot create dbFile '%s': %e", filename, err))
+			panic(fmt.Sprintf("cannot close dbFile '%s': %e", filename, err))
 		}
 	}()
 
-	_, err := file.Write(content)
+	_, err = file.Write(content)
 	if err != nil {
-		panic(fmt.Sprintf("error writing file '%s': %e", filename, err))
+		return err
 	}
+
+	return nil
 }

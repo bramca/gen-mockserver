@@ -13,6 +13,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/pb33f/libopenapi/datamodel/high/base"
 	"github.com/stretchr/testify/assert"
+	"github.com/test-go/testify/require"
 )
 
 func Test_RandStringBytesRmndr_ReturnsRandomString(t *testing.T) {
@@ -485,9 +486,10 @@ func Test_SpecV3toRequestStructureMap_ReturnsResponseBody(t *testing.T) {
 			t.Parallel()
 
 			// Act
-			resultMap := SpecV3toRequestStructureMap("./testdata/examplev3.yaml", data.maxRecursion, false)
+			resultMap, err := SpecV3toRequestStructureMap("./testdata/examplev3.yaml", data.maxRecursion, false)
 
 			// Assert
+			require.NoError(t, err)
 			assert.Equal(t, data.expectedMap, resultMap)
 		})
 	}
@@ -676,9 +678,10 @@ func Test_SpecV2toRequestStructureMap_ReturnsResponseBody(t *testing.T) {
 	}
 
 	// Act
-	resultMap := SpecV2toRequestStructureMap("./testdata/examplev2.yaml", 1, false)
+	resultMap, err := SpecV2toRequestStructureMap("./testdata/examplev2.yaml", 1, false)
 
 	// Assert
+	require.NoError(t, err)
 	assert.Equal(t, expectedMap, resultMap)
 }
 
@@ -686,14 +689,16 @@ func Test_GenerateDbFile_ReturnsContent(t *testing.T) {
 	t.Parallel()
 
 	// Arrange
-	featureFileDataStructure := SpecV3toRequestStructureMap("./testdata/examplev3.yaml", 1, false)
-	expectedResult, err := os.ReadFile("./testdata/examplev3-result/db.json")
+	featureFileDataStructure, parseErr := SpecV3toRequestStructureMap("./testdata/examplev3.yaml", 1, false)
+	expectedResult, readErr := os.ReadFile("./testdata/examplev3-result/db.json")
 
 	// Act
-	result := GenerateDbFile(featureFileDataStructure)
+	result, genErr := GenerateDbFile(featureFileDataStructure)
 
 	// Assert
-	assert.NoError(t, err)
+	require.NoError(t, parseErr)
+	require.NoError(t, readErr)
+	require.NoError(t, genErr)
 	assert.Equal(t, string(expectedResult), result)
 }
 
@@ -701,23 +706,25 @@ func Test_GenerateServerFile_ReturnsContent(t *testing.T) {
 	t.Parallel()
 
 	// Arrange
-	featureFileDataStructure := SpecV3toRequestStructureMap("./testdata/examplev3.yaml", 1, false)
+	featureFileDataStructure, parseErr := SpecV3toRequestStructureMap("./testdata/examplev3.yaml", 1, false)
 	scheme := "https"
 	port := 5000
 	dbFile := "db.json"
-	expectedResult, err := os.ReadFile("./testdata/examplev3-result/server.js")
+	expectedResult, readErr := os.ReadFile("./testdata/examplev3-result/server.js")
 	expectedResultSorted := make([]byte, len(expectedResult))
 	copy(expectedResultSorted, expectedResult)
 	slices.Sort(expectedResultSorted)
 
 	// Act
-	result := GenerateServerFile(scheme, port, dbFile, featureFileDataStructure)
+	result, genErr := GenerateServerFile(scheme, port, dbFile, featureFileDataStructure)
 
 	resultSorted := []byte(result)
 	slices.Sort(resultSorted)
 
 	// Assert
-	assert.NoError(t, err)
+	require.NoError(t, parseErr)
+	require.NoError(t, readErr)
+	require.NoError(t, genErr)
 	if !assert.Equal(t, expectedResultSorted, resultSorted) {
 		fmt.Printf("File contents are not equal.\nexpected content:\n%s\n----------\nactual content:\n%s", expectedResult, result)
 		t.Fail()
