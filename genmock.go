@@ -237,8 +237,7 @@ func schemaToPropertyMapV3(schema *base.SchemaProxy, definitions *orderedmapv2.O
 		for _, schemaField := range responseBodySchema.AllOf {
 			responseBody = schemaToPropertyMapV3(schemaField, definitions, responseBody, maxRecursion, recursionDepth, genExamples)
 		}
-	}
-	if responseBodySchema.Type != nil && responseBodySchema.Type[0] == "array" {
+	} else if responseBodySchema.Type != nil && responseBodySchema.Type[0] == "array" {
 		items := []map[string]any{}
 		if responseBodySchema.Items != nil && responseBodySchema.Items.IsA() {
 			arrayItemSchema := responseBodySchema.Items.A
