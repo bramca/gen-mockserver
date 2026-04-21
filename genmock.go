@@ -332,8 +332,16 @@ func schemaToPropertyMapV2(schema *base.SchemaProxy, definitions *orderedmap.Map
 		}
 	}
 	if responseBodySchema.AllOf != nil {
+		if _, ok := responseBody.(map[string]any); !ok {
+			responseBody = map[string]any{}
+		}
 		for _, schemaField := range responseBodySchema.AllOf {
-			responseBody = schemaToPropertyMapV2(schemaField, definitions, responseBody, maxRecursion, recursionDepth, genExamples)
+			responseBodySub := schemaToPropertyMapV2(schemaField, definitions, responseBody, maxRecursion, recursionDepth, genExamples)
+			if responseBodySubMap, ok := responseBodySub.(map[string]any); ok {
+				for k, v := range responseBodySubMap {
+					responseBody.(map[string]any)[k] = v
+				}
+			}
 		}
 	}
 	if responseBodySchema.Type != nil && responseBodySchema.Type[0] == "array" {
