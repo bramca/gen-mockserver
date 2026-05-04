@@ -1,6 +1,6 @@
 # 💻 Gen Mockserver
 
-![GitHub](https://img.shields.io/github/license/bramca/gen-mockserver)
+![license](https://img.shields.io/github/license/bramca/gen-mockserver)
 [![build](https://github.com/bramca/gen-mockserver/actions/workflows/test.yaml/badge.svg)](https://github.com/bramca/gen-mockserver/actions/workflows/test.yaml)
 [![release](https://img.shields.io/github/v/release/bramca/gen-mockserver.svg)](https://github.com/bramca/gen-mockserver/releases)
 
