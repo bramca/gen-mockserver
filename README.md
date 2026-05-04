@@ -1,7 +1,7 @@
 # 💻 Gen Mockserver
 
 ![GitHub](https://img.shields.io/github/license/bramca/gen-mockserver)
-[![tests](https://github.com/bramca/gen-mockserver/actions/workflows/test.yaml/badge.svg)](https://github.com/bramca/gen-mockserver/actions/workflows/test.yaml)
+[![build](https://github.com/bramca/gen-mockserver/actions/workflows/test.yaml/badge.svg)](https://github.com/bramca/gen-mockserver/actions/workflows/test.yaml)
 [![release](https://img.shields.io/github/v/release/bramca/gen-mockserver.svg)](https://github.com/bramca/gen-mockserver/releases)
 
 gen-mockserver is a simple tool for generating a mock server based on an [OpenAPI](https://www.openapis.org/) Spec `v2` or `v3`.
