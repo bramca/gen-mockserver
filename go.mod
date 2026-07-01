@@ -10,7 +10,7 @@ require (
 	github.com/pb33f/ordered-map/v2 v2.3.1
 	github.com/stretchr/testify v1.11.1
 	github.com/test-go/testify v1.1.4
-	go.yaml.in/yaml/v4 v4.0.0-rc.4
+	go.yaml.in/yaml/v4 v4.0.0-rc.6
 )
 
 require (
