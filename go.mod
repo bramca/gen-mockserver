@@ -3,7 +3,7 @@ module github.com/bramca/gen-mockserver
 go 1.26.0
 
 require (
-	github.com/brianvoe/gofakeit/v7 v7.15.0
+	github.com/brianvoe/gofakeit/v7 v7.16.0
 	github.com/google/uuid v1.6.0
 	github.com/jessevdk/go-flags v1.6.1
 	github.com/pb33f/libopenapi v0.38.7
