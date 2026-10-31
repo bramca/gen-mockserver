@@ -3,12 +3,11 @@ module github.com/bramca/gen-mockserver
 go 1.26.0
 
 require (
-	github.com/brianvoe/gofakeit/v7 v7.17.1
+	github.com/brianvoe/gofakeit/v7 v7.18.1
 	github.com/google/uuid v1.6.0
 	github.com/jessevdk/go-flags v1.6.1
-
+	github.com/pb33f/libopenapi v0.41.8
 	github.com/pb33f/ordered-map/v2 v2.3.2
-	github.com/pb33f/libopenapi v0.40.1
 	github.com/stretchr/testify v1.12.1
 	github.com/test-go/testify v1.1.4
 	go.yaml.in/yaml/v4 v4.0.0-rc.6
@@ -17,9 +16,9 @@ require (
 require (
 	github.com/bahlo/generic-list-go v0.2.0 // indirect
 	github.com/buger/jsonparser v1.2.0 // indirect
-	github.com/pb33f/go-yaml v0.1.0 // indirect
-	github.com/pb33f/jsonpath v0.8.3 // indirect
+	github.com/pb33f/go-yaml v0.1.1 // indirect
+	github.com/pb33f/jsonpath v0.8.4 // indirect
 	go.yaml.in/yaml/v3 v3.0.5 // indirect
-	golang.org/x/sync v0.23.0 // indirect
+	golang.org/x/sync v0.24.0 // indirect
 	golang.org/x/sys v0.45.0 // indirect
 )
