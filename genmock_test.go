@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"go.yaml.in/yaml/v4"
+	"github.com/pb33f/go-yaml"
 
 	"github.com/google/uuid"
 	"github.com/pb33f/libopenapi/datamodel/high/base"
